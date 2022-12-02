@@ -1,0 +1,295 @@
+#GridWindow {
+	background-color: white;
+}
+#BBox0 {
+	background-color: white;
+}
+#BBox1 {
+	background-color: white;
+}
+#BBox2 {
+	background-color: white;
+}
+#BBox3 {
+	background-color: white;
+}
+#BBox4 {
+	background-color: white;
+}
+#BBox5 {
+	background-color: white;
+}
+#BBox6 {
+	background-color: white;
+}
+#BBox7 {
+	background-color: white;
+}
+#BBox8 {
+	background-color: white;
+}
+#MsgButtonBox {
+	background-color: white;
+}
+#PrecisionDialogButtonBox {
+	background-color: white;
+}
+#ProgressBar empty{
+	color: whitesmoke;
+	background-color: green;
+}
+#ProgressBar {
+	color: green;
+	background-color: whitesmoke;
+}
+#InputBox text{
+	color: black;
+	background-color: white;
+}
+#OutputBox text{
+	color: black;
+	background-color: white;
+}
+#OutputLabel {
+	color: red;
+	background-color: whitesmoke;
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+	font-size: 14px;
+	font-weight: bold;
+}
+#InputLabel {
+	color: blue;
+	background-color: whitesmoke;
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+	font-size: 14px;
+	font-weight: bold;
+}
+#SevenButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#EightButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#NineButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#ClearButton {
+	color: black;
+	font-family: 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
+	font-size: 22px;
+	background-color: lightgray;
+}
+#AllClearButton {
+	color: black;
+	font-family: 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
+	font-size: 22px;
+	background-color: lightgray;
+}
+#LNButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#ExpButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#ATANButton {
+	color: black;
+	font-family: 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
+	font-size: 22px;
+	background-color: lightgray;
+}
+#TenButton {
+	color: black;
+	font-family: 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
+	font-size: 22px;
+	background-color: lightgray;
+}
+#FourButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#FiveButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#SixButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#TimesButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#DivideButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#SineButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#CosineButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#TangentButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#LOGButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#OneButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#TwoButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#ThreeButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#AddButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#MinusButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#MultiplicativeInverseButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#SquareButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#SqrtButton {
+	color: black;
+	font-family: MathJax_Script, 'Cambria Math';
+	font-size: 28px;
+	background-color: lightgray;
+}
+#RaiseButton {
+	color: black;
+	font-family: 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
+	font-size: 22px;
+	background-color: lightgray;
+}
+#PiButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#ZeroButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#PointButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#EqualButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#InvertSignButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#FactorialButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#LDXButton {
+	color: black;
+	font-family: 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
+	font-size: 22px;
+	background-color: lightgray;
+}
+#ChangePrecisionButton {
+	color: black;
+	font-family: MathJax_Script;
+	font-size: 28px;
+	background-color: lightgray;
+}
+#ExitButton {
+	color: red;
+	font-family: 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
+	font-size: 22px;
+	background-color: lightgray;
+}
+#OKButton {
+	color: yellow;
+	background-color: blue;
+}
+#PrecisionDialogLabel {
+	color: blue;
+	background-color: whitesmoke;
+}
+#PrecisionDialogEntry {
+	color: red;
+	background-color: white;
+}
+
