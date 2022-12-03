@@ -1,1 +1,1 @@
-obj/dbg/stdafx.o obj/rel/stdafx.o: src/stdafx.cpp inc/stdafx.h
+obj/rel/stdafx.o obj/dbg/stdafx.o: src/stdafx.cpp inc/stdafx.h

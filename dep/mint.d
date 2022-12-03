@@ -1,1 +1,1 @@
-obj/dbg/mint.o obj/rel/mint.o: src/mint.cpp inc/stdafx.h inc/mint.h
+obj/rel/mint.o obj/dbg/mint.o: src/mint.cpp inc/stdafx.h inc/mint.h
