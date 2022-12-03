@@ -40,16 +40,7 @@ GUI::GUI(void)
     pG->get("OutputBox", oBox);
     oBox->set_editable(false);
     Pango::FontDescription fdesc;
-    #ifdef _CROSS_COMPILE
-        //exp_char = "❿";
-        //exp_char = "E";
-        //exp_char = "⓾";
-        exp_char = "↑";
-        //mfloat::exp_char = exp_char;
-        fdesc.set_family("Cambria_Math");
-    #else
-        fdesc.set_family("MathJax_SansSerif");
-    #endif
+    fdesc.set_family("Arial");
     fdesc.set_size(10 * PANGO_SCALE);
     oBox->override_font(fdesc);    
     otb = Gtk::TextBuffer::create();
