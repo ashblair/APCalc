@@ -1,5 +1,5 @@
 # call make w/ one of the following defined for cross compilation:
-#CROSS := i686
+#CROSS := i686  LINK_TYPE will be static or shared
 #CROSS := x86_64
 
 BFDHEAD := elf64-x86-64
@@ -24,172 +24,190 @@ PKG_CONFIG=$(FULLCROSS)pkg-config
 CXX		  := $(FULLCROSS)g++
 CPPSTANDARD:= -std=c++17
 
-OBJCPY 	:= $(FULLCROSS)objcopy --input binary --output $(BFDHEAD) --binary-architecture i386
+OBJCPY 	:= $(LD) -r -b binary
 RSCCPY	:= $(FULLCROSS)windres -O coff
 REL 	:= rel
 DBG		:= dbg
+BIN     := bin
+SRC		:= src
+INC		:= inc
+RSC 	:= rsc
+CWD		:= $(PWD)
+# ACT_ONS are the roots of the directory trees with all the files that MAKE will act on 
+ACT_ONS := $(SRC) $(RSC)
 
-ifneq ($(RELEASE_DIR),)
-	OBJDIR := $(REL)
-	OTHEROBJDIR := $(DBG)
+ifneq (,$(RELEASE_DIR))
+	BLD := $(BIN)/$(REL)
 else
-	OBJDIR := $(DBG)
-	OTHEROBJDIR := $(REL)
+	BLD := $(BIN)/$(DBG)
 	DEBUGFLAG := -ggdb
 endif
 
 CXX_FLAGS := $(CPPSTANDARD) $(OTHERFLAGS) $(DEBUGFLAG)
 
-BIN		:= bin/$(OBJDIR)
-OBIN	:= bin/$(OTHEROBJDIR)
-SRC		:= src
-INC		:= inc
-OBJ     := obj/$(OBJDIR)
-OOBJ	:= obj/$(OTHEROBJDIR)
-RSC 	:= rsc
-DEP		:= dep
-CWD		:= $(PWD)
-CFLAGS	:= `$(PKG_CONFIG) gtkmm-3.0 --cflags`
-LIBRARIES	:= `$(PKG_CONFIG) gtkmm-3.0 --libs`
+CFLAGS	:= $(shell $(PKG_CONFIG) gtkmm-3.0 --cflags)
+LIBRARIES	:= $(shell $(PKG_CONFIG) gtkmm-3.0 epoxy glu --libs)
 # -lcuda library for parallel processing
+#  glx epoxy opengl gl glew sdl2 glu
 
-EXECUTABLE := $(notdir $(CWD))$(EXE_SFX)
+EXE := $(notdir $(CWD))$(EXE_SFX)
 
 ICONFILE := $(CWD)/share/icons/small.ico
-USETERMINAL := true
+USETERMINAL := false
 LOGFILE := $(CWD)/log.txt
+DEPFILE := $(CWD)/dep.txt
+DIRFILE := $(CWD)/dir.txt
+
+#updating base directory structure:
+BDIRS := $(BIN) $(SRC) $(RSC) $(INC) $(BIN)/$(DBG) $(BIN)/$(REL) 
+BD_CHK := $(foreach BD, $(BDIRS), [$(shell [ -d $(BD) ] && echo $(BD)_exists || mkdir $(BD) -pv )])
+BD_ADDS:= $(filter-out %_exists], $(BD_CHK))
+ifneq (,$(BD_ADDS))
+BUFF := $(file >> $(DIRFILE),[directories created=$(BD_ADDS)])
+endif
+#updating directory structure in build subdirectory:
+ODIRS := $(shell find -type d)
+ODIRS := $(ODIRS:./.%=) 
+ODIRS := $(ODIRS:./%=%)
+ODIRS := $(ODIRS:.=)
+ODIRS := $(foreach OD, $(ACT_ONS), $(filter $(OD)%, $(ODIRS)))
+ODIRS := $(addprefix $(BLD)/, $(ODIRS))
+ADIRS := $(shell find $(BLD) -type d)
+ADIRS := $(ADIRS:$(BLD)=)
+ADIRS := $(filter-out $(ODIRS), $(ADIRS))
+ADIRS := $(strip $(ADIRS))
+MD_RES := $(foreach OD, $(ODIRS), [$(shell [ -d $(OD) ] && echo $(OD)_PRESENT  || mkdir $(OD) -pv )])
+BR_ADDS:= $(filter-out %_PRESENT],$(MD_RES))
+ifneq (,$(BR_ADDS))
+BUFF := $(file >> $(DIRFILE),[added branches=$(BR_ADDS)])
+endif
+RF_RES := $(foreach AD, $(ADIRS), [$(shell $(RM) -v `find $(AD) -type f`)])
+RD_RES := $(foreach AD, $(ADIRS),[$(shell rmdir $(AD) -pv 2>&1 | sed 's/^rmdir: failed to remove .*: Directory not empty$$/ - failed/g')])
+ifneq (,$(ADIRS)) 
+BUFF := $(file >> $(DIRFILE),[trees to prune=$(ADIRS)] - [files deleted=$(RF_RES)] - [directories removed=$(RD_RES)])
+endif
 
 #derived file variables:
-allinBIN := $(notdir $(shell find ./$(BIN) -maxdepth 1 -type f))
-allinOTHERBIN := $(notdir $(shell find ./$(OBIN) -maxdepth 1 -type f))
-allinOBJ := $(notdir $(shell find ./$(OBJ) -maxdepth 1 -type f))
-allinOTHEROBJ := $(notdir $(shell find ./$(OOBJ) -maxdepth 1 -type f))
-allinDEP := $(notdir $(shell find ./$(DEP) -maxdepth 1 -type f))
-allinRSC := $(notdir $(shell find ./$(RSC) -maxdepth 1 -type f))
-allinSRC := $(notdir $(shell find ./$(SRC) -maxdepth 1 -type f))
-sources :=  $(filter %.cpp, $(allinSRC))
-sourceobjs := $(addsuffix .o, $(basename $(notdir $(sources))))
-incdepends := $(addsuffix .d, $(basename $(notdir $(sources))))
-resourceobj:= $(addsuffix .o, $(allinRSC))
-delobjs := $(filter-out $(resourceobj), $(filter-out $(sourceobjs), $(allinOBJ)))
-deldeps := $(filter-out $(incdepends), $(allinDEP))
-workobjects := $(addprefix $(OBJ)/, $(sourceobjs))
-workdeps := $(addprefix $(DEP)/, $(incdepends))
-workobjrsc := $(addprefix $(OBJ)/, $(resourceobj))
-allobjs := $(workobjects) $(workobjrsc)
-rundesktopfile := $(EXECUTABLE).desktop
-runshellfile := $(EXECUTABLE).sh
+allinBIN := $(shell find $(BIN) -type f)  #$(wildcard $(BIN)/$(DBG)/*) $(wildcard $(BIN)/$(REL)/*)
+allinBLD := $(shell find $(BLD) -type f)
+allinRSC := $(shell find $(RSC) -type f)
+allinSRC := $(shell find $(SRC) -type f)
+SRCS :=  $(filter %.cpp, $(allinSRC))
+DEPS := $(addprefix $(BLD)/, $(addsuffix .d, $(SRCS)))
+OBJS := $(addprefix $(BLD)/, $(addsuffix .o, $(SRCS)))
+OBJS += $(addprefix $(BLD)/, $(addsuffix .o, $(allinRSC)))
+DEL_BLD := $(filter-out $(BLD)/$(EXE), $(filter-out $(DEPS), $(filter-out $(OBJS), $(allinBLD))))
+RUN_DT := $(EXE).desktop
+RUN_SH := $(EXE).sh
 
 .PHONY: all
 all: logsetup compile
+	@echo all completed >> $(LOGFILE)
 
 .PHONY: run
 run: all
-	$(EXE_PFX)./$(BIN)/$(EXECUTABLE)
+	$(EXE_PFX)./$(BLD)/$(EXE)
+	@echo run completed >> $(LOGFILE)
 
 .PHONY: compile
-compile: prepobjs prepdepends make_src make_rsc make_bin
-	@printf \# > $(rundesktopfile)
-	@echo !/usr/bin/env xdg-open >> $(rundesktopfile)
-	@echo [Desktop Entry] >> $(rundesktopfile)
-	@echo Name=Run $(EXECUTABLE) >> $(rundesktopfile)
-	@echo Comment=A Nemo Work-around >> $(rundesktopfile)
-	@echo Exec=$(CWD)/$(EXECUTABLE).sh >> $(rundesktopfile)
-	@echo Icon=$(ICONFILE) >> $(rundesktopfile)
-	@echo Terminal=$(USETERMINAL) >> $(rundesktopfile)
-	@echo Type=Application >> $(rundesktopfile)
-	@printf \# > $(runshellfile)
-	@echo !/bin/bash >> $(runshellfile)
-	@echo cd $(CWD) >> $(runshellfile)
-	@echo $(EXE_PFX)./$(BIN)/$(EXECUTABLE) >> $(runshellfile)
-	@echo echo \"Press 'Enter' To Exit\" >> $(runshellfile)
-	@echo read extKey >> $(runshellfile)
-	@chmod a+x $(EXECUTABLE).*
+compile: prepbld make_exe
+	@printf \# > $(RUN_DT)
+	@echo !/usr/bin/env xdg-open >> $(RUN_DT)
+	@echo [Desktop Entry] >> $(RUN_DT)
+	@echo Name=Run $(EXE) >> $(RUN_DT)
+	@echo Comment=A Nemo Work-around >> $(RUN_DT)
+	@echo Exec=$(CWD)/$(EXE).sh >> $(RUN_DT)
+	@echo Icon=$(ICONFILE) >> $(RUN_DT)
+	@echo Terminal=$(USETERMINAL) >> $(RUN_DT)
+	@echo Type=Application >> $(RUN_DT)
+	@printf \# > $(RUN_SH)
+	@echo !/bin/bash >> $(RUN_SH)
+	@echo cd $(CWD) >> $(RUN_SH)
+	@echo $(EXE_PFX)./$(BLD)/$(EXE) >> $(RUN_SH)
+	@echo echo \"Press 'Enter' To Exit\" >> $(RUN_SH)
+	@echo read extKey >> $(RUN_SH)
+	@chmod a+x $(EXE).*
+	@echo compile completed >> $(LOGFILE)
 
 .PHONY: clean
-clean:
-	-@if [ $(words $(allinBIN)) -gt  0 ]; then rm -f $(BIN)/*; fi
-	-@if [ $(words $(allinOTHERBIN)) -gt 0 ]; then rm -f $(OBIN)/*; fi
-	-@if [ $(words $(allinOBJ)) -gt  0 ]; then rm -f $(OBJ)/*; fi
-	-@if [ $(words $(allinOTHEROBJ)) -gt 0 ]; then rm -f $(OOBJ)/*; fi 
-	-@if [ $(words $(allinDEP)) -gt  0 ]; then rm -f $(DEP)/*; fi 
+clean: 
+	@$(RM) $(allinBIN)
+	@echo deleted $(words $(allinBIN)) files [$(allinBIN)] >> $(LOGFILE)
 
-# remove all objects that don't have a source or resource
-.PHONY: prepobjs
-prepobjs:
-	-@for X in $(delobjs) ; do rm -f $(OBJ)/$$X ; done
+PHONY: prepbld
+prepbld:
+	@$(RM) $(DEL_BLD)
+	@echo deleted $(words $(DEL_BLD)) build files [$(DEL_BLD)] >> $(LOGFILE)
 
-#remove all depend files that don't have a source
-.PHONY: prepdepends
-prepdepends:
-	-@for X in $(deldeps) ; do rm -f $(DEP)/$$X; done
+.PHONY: make_exe
+make_exe: $(BLD)/$(EXE)
+	@echo make_exe completed >> $(LOGFILE)
 
-.PHONY: make_bin
-make_bin: $(BIN)/$(EXECUTABLE)
-
-$(BIN)/$(EXECUTABLE): $(allobjs)
-	@$(CXX) $(CXX_FLAGS) $^ -o $@ $(LIBRARIES)
+$(BLD)/$(EXE): $(OBJS)
+	@$(CXX) $^ -o $@ $(LIBRARIES)
+	@chmod a+x $(BLD)/$(EXE)
 	@echo linked all objects into $@ >> $(LOGFILE)
 
-.PHONY: make_rsc
-make_rsc: $(workobjrsc)
-
-$(OBJ)/%.o:$(RSC)/%
+$(BLD)/$(RSC)/%.o: $(RSC)/%
 	@if [ $(suffix $<) = ".rc" ]; then \
 	$(RSCCPY) $< $@ ; \
 	else \
-	$(OBJCPY) $< $@ ; fi ;
+	$(OBJCPY) $< -o $@ ; fi ;
 	@echo resource $< made into object $@ >> $(LOGFILE) ;
 
-.PHONY: make_src
-make_src: compile_src
-
-.PHONY: compile_src
-compile_src: $(workobjects)
-
-$(OBJ)/%.o:$(SRC)/%.cpp
+$(BLD)/$(SRC)/%.o: $(SRC)/%
 	@$(CXX) $(CXX_FLAGS) -I$(INC) $(CFLAGS) $< -c -o $@
 	@echo new object file compiled [$@] >> $(LOGFILE)
-	@STEM=$(basename $(notdir $@)) ; \
-	$(CXX) -I$(INC) -MM $< -MF $(DEP)/$${STEM}.d ; \
-	sed -i "s,$${STEM}.o,$(OBJ)/$${STEM}.o $(OOBJ)/$${STEM}.o," $(DEP)/$${STEM}.d ; \
-	echo new depend file compiled [$(DEP)/$${STEM}.d] >> $(LOGFILE)
 
-$(workdeps):
-
-include $(workdeps)
+$(BLD)/$(SRC)/%.d: $(SRC)/%
+	@$(CXX) $(CXX_FLAGS) -I$(INC) -MM $< -MF $@
+	@STEM=$(subst .cpp,,$*) ; \
+	sed -i "s,$${STEM}.o,$(BLD)/$(SRC)/$${STEM}.cpp.o $@," $@ ; \
+	sed -i "s,$< ,," $@ ;
+	@echo new depend file compiled [$@] >> $(DEPFILE)
 
 .PHONY: logsetup
 logsetup:
 	@echo BUILD LOG `date` > $(LOGFILE)
+	@echo -----\>Cross Compile Variables: >> $(LOGFILE)
+	@echo [FULLCROSS=$(FULLCROSS)] - [BFDHEAD=$(BFDHEAD)] - [LINK_TYPE=$(LINK_TYPE)] >> $(LOGFILE) 
 	@echo -----\>User Variables: >> $(LOGFILE)
+	@echo [RELEASE_DIR=$(RELEASE_DIR)] - [MAKECMDGOALS=$(MAKECMDGOALS)] - [MAKE_RESTARTS=$(MAKE_RESTARTS)] [MAKEFILE_LIST=$(MAKEFILE_LIST)] >> $(LOGFILE)
+	@echo [necessary build directories=$(ODIRS)] - [checks=$(MD_RES)] >> $(LOGFILE)
+	@if [ -f $(DIRFILE) ]; then \
+	echo -------\>UPDATED THESE FILES AND DIRECTORIES: >> $(LOGFILE) ; \
+	cat $(DIRFILE) >> $(LOGFILE) ; \
+	$(RM) $(DIRFILE) ; fi ; 
 	@echo [CXX=$(CXX)] - [CXX_FLAGS=$(CXX_FLAGS)] >> $(LOGFILE)
-	@echo [BIN=$(BIN)] - [OBIN$(OBIN)] - [SRC=$(SRC)] >> $(LOGFILE)
-	@echo [INC=$(INC)] - [OBJ=$(OBJ)] - [OOBJ=$(OOBJ)] >> $(LOGFILE)
-	@echo [RSC=$(RSC)] - [DEP=$(DEP)] - [CWD=$(CWD)] >> $(LOGFILE)
+	@echo [BIN=$(BIN)] - [BLD=$(BLD)] - [SRC=$(SRC)] >> $(LOGFILE)
+	@echo [INC=$(INC)] - [DBG=$(DBG)] - [REL=$(REL)] >> $(LOGFILE)
+	@echo [RSC=$(RSC)] - [CWD=$(CWD)] >> $(LOGFILE)
 	@echo [CFLAGS=$(CFLAGS)] >> $(LOGFILE)
-	@echo [EXECUTABLE=$(EXECUTABLE)] - [ICONFILE=$(ICONFILE)] >> $(LOGFILE)
+	@echo [EXE=$(EXE)] - [ICONFILE=$(ICONFILE)] >> $(LOGFILE)
 	@echo [LIBRARIES=$(LIBRARIES)] >> $(LOGFILE)
 	@echo [USETERMINAL=$(USETERMINAL)] - [LOGFILE=$(LOGFILE)] >> $(LOGFILE)
-	@echo [CROSS=$(CROSS)] - [BFDHEAD=$(BFDHEAD)] - [DEBUGFLAG=$(DEBUGFLAG)] >> $(LOGFILE)
-	@echo [RELEASE_DIR=$(RELEASE_DIR)] - [REL=$(REL)] - [DBG=$(DBG)] >> $(LOGFILE)
-	@echo [OBJDIR=$(OBJDIR)] - [OTHEROBJDIR=$(OTHEROBJDIR)] >> $(LOGFILE)
+	@echo [DEBUGFLAG=$(DEBUGFLAG)] >> $(LOGFILE)
 	@echo -----\>Calculated/Environmental Variables: >> $(LOGFILE)
-	@echo [sources=$(sources)] >> $(LOGFILE)
-	@echo [sourceobjs=$(sourceobjs)] >> $(LOGFILE)
-	@echo [incdepends=$(incdepends)] >> $(LOGFILE)
-	@echo [resourceobj=$(resourceobj)] >> $(LOGFILE)
-	@echo [delobjs=$(delobjs)] >> $(LOGFILE)
-	@echo [deldeps=$(deldeps)] >> $(LOGFILE)
-	@echo [workobjects=$(workobjects)] >> $(LOGFILE)
-	@echo [workdeps=$(workdeps)] >> $(LOGFILE)
-	@echo [workobjrsc=$(workobjrsc)] >> $(LOGFILE)
+	@echo [SRCS=$(SRCS)] >> $(LOGFILE)
+	@echo [DEPS=$(DEPS)] >> $(LOGFILE)
+	@echo [DEL_BLD=$(DEL_BLD)] >> $(LOGFILE)
 	@echo [allinBIN=$(allinBIN)] >> $(LOGFILE)
-	@echo [allinOTHERBIN=$(allinOTHERBIN)] >> $(LOGFILE)
-	@echo [allinOBJ=$(allinOBJ)] >> $(LOGFILE)
-	@echo [allinOTHEROBJ=$(allinOTHEROBJ)] >> $(LOGFILE)
-	@echo [allinDEP=$(allinDEP)] >> $(LOGFILE)
+	@echo [allinBLD=$(allinBLD)] >> $(LOGFILE)
 	@echo [allinRSC=$(allinRSC)] >> $(LOGFILE)
 	@echo [allinSRC=$(allinSRC)] >> $(LOGFILE)
-	@echo [allobjs=$(allobjs)] >> $(LOGFILE)
+	@echo [OBJS=$(OBJS)] >> $(LOGFILE)
+	@if [ -f $(DEPFILE) ]; then \
+	echo -------\>MADE DEPENDS FILES WHEN INCLUDING: >> $(LOGFILE) ; \
+	cat $(DEPFILE) >> $(LOGFILE) ; \
+	$(RM) $(DEPFILE) ; fi ; 
 	@echo -----\>MAKE OUTPUT FOLLOWS: >> $(LOGFILE)
+
+.PHONY: logclear
+logclear:
+	@$(RM) $(LOGFILE)
+
+#including all the depends files only if we're compiling
+ifeq (,$(findstring $(MAKECMDGOALS),clean-logsetup-logclear-prepbld))
+include $(DEPS)
+endif
+
